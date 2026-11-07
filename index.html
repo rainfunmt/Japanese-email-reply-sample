@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>日文書信帖</title>
+<style>
+  /*
+    Layout concept: a stacked letter-paper column on a washi ground —
+    the generator is the first panel (the writing desk), the four
+    scenario cards below are a 範本帖 (sample book) to consult or copy from.
+
+    This is a standalone local file (opened directly in a browser, not a
+    Claude Artifact), so it supplies its own doctype/head and the small
+    reset an Artifact skeleton would otherwise provide.
+  */
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #f6f1e7;
+    --surface: #fffdf8;
+    --surface-2: #ece3cd;
+    --fg: #22241f;
+    --muted: #726b58;
+    --border: #ddd0ac;
+    --accent: #26415c;
+    --accent-fg: #f6f1e7;
+    --seal: #a13d2d;
+    --ok: #3a6b4c;
+    --font-display: "Shippori Mincho", "Noto Serif JP", serif;
+    --font-body: "Noto Sans JP", "Noto Sans TC", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1b1a16;
+      --surface: #242220;
+      --surface-2: #2d2a25;
+      --fg: #ece4d2;
+      --muted: #a79f8a;
+      --border: #3c3730;
+      --accent: #8fb0d6;
+      --accent-fg: #1b1a16;
+      --seal: #e08a6d;
+      --ok: #85c29a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1b1a16;
+    --surface: #242220;
+    --surface-2: #2d2a25;
+    --fg: #ece4d2;
+    --muted: #a79f8a;
+    --border: #3c3730;
+    --accent: #8fb0d6;
+    --accent-fg: #1b1a16;
+    --seal: #e08a6d;
+    --ok: #85c29a;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-block: 32px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  header.hero { display: flex; flex-direction: column; gap: 8px; }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    font-weight: 600;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 5vw, 34px);
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: 0.02em;
+  }
+  .lede { color: var(--muted); margin: 0; max-width: 60ch; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel h2 {
+    font-family: var(--font-display);
+    font-size: 19px;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .panel h2 .num {
+    font-size: 12px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-family: var(--font-body);
+    letter-spacing: 0.04em;
+  }
+
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .field { min-width: 0; }
+  textarea, select, input[type="text"] {
+    width: 100%;
+    font: inherit;
+    color: var(--fg);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  textarea { resize: vertical; min-height: 84px; font-family: var(--font-body); }
+  select, input[type="text"] { height: 40px; }
+  .key-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .row-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 560px) { .row-3, .row-2 { grid-template-columns: 1fr; } }
+  .reason-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .reason-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .reason-fields { grid-template-columns: 1fr; } }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 20px;
+    cursor: pointer;
+  }
+  button:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-fg); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+
+  .status { font-size: 13px; color: var(--muted); min-height: 1.4em; }
+  .status.err { color: var(--seal); }
+
+  .output { display: flex; flex-direction: column; gap: 14px; border-top: 1px dashed var(--border); padding-top: 14px; }
+  .draft-box { position: relative; }
+  .draft-box textarea { min-height: 220px; font-family: var(--font-body); white-space: pre-wrap; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 6px 10px; }
+
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chips li { font-size: 13px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .chips b { color: var(--accent); }
+  .tips { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg); }
+  .tips li { margin-bottom: 4px; }
+
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .card-grid { grid-template-columns: 1fr; } }
+
+  details.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    min-width: 0;
+  }
+  details.card summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  details.card summary::-webkit-details-marker { display: none; }
+  .scenario-tag {
+    font-family: var(--font-display);
+    font-size: 16px;
+  }
+  .scenario-chevron { color: var(--muted); transition: transform 0.15s ease; }
+  details.card[open] .scenario-chevron { transform: rotate(90deg); }
+  .before-line { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .after-block { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .after-text {
+    white-space: pre-wrap;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    overflow-x: auto;
+  }
+  .apply-btn { font-size: 12px; padding: 6px 10px; align-self: flex-start; }
+
+  footer { font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <span class="eyebrow">日文商務書信草稿工具</span>
+    <h1>日文書信帖</h1>
+    <p class="lede">選擇情境、對象關係和正式/委婉程度，套用固定的日文商務書信範本，並標出敬語等級和可以再調整的地方；下方也附了四種常見情境的完整範本可以直接參考。</p>
+  </header>
+
+  <section class="panel" id="generator">
+    <h2><span class="num">1</span>產生草稿</h2>
+    <p class="lede" style="margin:0;">範本是套好的固定內容，不會幫你翻譯「想表達的事」——那欄是留給你自己對照著把細節（商品名、日期、金額等）填進下方空格用的。</p>
+
+    <div class="field">
+      <label for="content">想表達的事（中文或英文皆可）</label>
+      <textarea id="content" placeholder="例：這次出貨延遲了，想跟客戶道歉，說明是工廠設備問題，之後會準時出貨。"></textarea>
+    </div>
+
+    <div class="row-3">
+      <div class="field">
+        <label for="scenario">情境類型</label>
+        <select id="scenario">
+          <option value="apology">道歉</option>
+          <option value="quote">報價</option>
+          <option value="reminder">催交期</option>
+          <option value="refusal">拒絕</option>
+          <option value="other">其他</option>
+        </select>
+        <p class="key-note" id="scenarioHint"></p>
+      </div>
+      <div class="field">
+        <label for="relation">對象關係</label>
+        <select id="relation">
+          <option>初次接觸</option>
+          <option>長期往來客戶</option>
+          <option>上級或重要客戶</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="formality">正式/委婉程度</label>
+        <select id="formality">
+          <option>一般丁寧</option>
+          <option>更委婉謙讓</option>
+          <option>嚴肅鄭重</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="reason-panel" id="reasonPanel" hidden>
+      <div class="field" style="margin:0;">
+        <label for="reasonType" id="reasonTypeLabel">原因/補充說明類型（會自動套進下方日文正文）</label>
+        <select id="reasonType"></select>
+      </div>
+      <div class="reason-fields" id="reasonFields"></div>
+    </div>
+
+    <div class="reason-panel" id="extraPanel" hidden>
+      <div class="reason-fields" id="extraFields"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button class="btn-primary" id="generateBtn" type="button">產生日文草稿</button>
+      <span class="status" id="status"></span>
+    </div>
+
+    <div class="output" id="output" hidden>
+      <div class="draft-box">
+        <label for="draftText">日文草稿（可直接編輯）</label>
+        <textarea id="draftText"></textarea>
+        <button class="btn-ghost copy-btn" id="copyBtn" type="button">複製</button>
+      </div>
+      <div>
+        <label>敬語等級標註</label>
+        <ul class="chips" id="keigoList"></ul>
+      </div>
+      <div>
+        <label>可依關係調整</label>
+        <ul class="tips" id="tipsList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="num">2</span>四種情境範本</h2>
+    <p class="lede" style="margin:0;">點開查看完整草稿、敬語標註與可調整處；也可以「套用」把內容帶進上面的產生器再試著改寫。</p>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <footer>敬語標註僅供參考，正式發出前建議請日籍同事或熟悉商務日文的人協助校對。</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Each scenario has three hand-written register variants (general / soft /
+  // formal). {{REL}} inside a paragraph is replaced with a short clause from
+  // RELATION_CLAUSES[scenario.id][relation] (may be "") — no AI involved,
+  // so the output is always exactly one of these fixed texts.
+  var SCENARIOS = [
+    {
+      id: "apology",
+      label: "道歉",
+      before: "上次出貨延遲了，想跟客戶道歉，說明原因是工廠線路出問題，之後會準時。",
+      keigo: [
+        ["お詫び申し上げます", "謙譲語。自分の行為を低めて述べる最上級の謝罪表現。"],
+        ["ご迷惑をおかけしました", "尊敬語＋謙譲語の組み合わせ。相手の受けた迷惑を敬って述べる。"],
+        ["いたします", "謙譲語。自分の今後の行動を控えめに述べる。"]
+      ],
+      tips: [
+        "長期往來客戶：可以把「心より深く」省略，只用「お詫び申し上げます」即可，不會顯得冷淡。",
+        "重大客戶或造成實際損失時：可加一句「再発防止に努めてまいります」，表示會有具體改善措施。"
+      ],
+      variants: {
+        general: [
+          "件名：出荷遅延のお詫び",
+          "○○株式会社　○○様",
+          "いつもお世話になっております。株式会社△△の◇◇でございます。",
+          "{{REL}}このたびの出荷遅延により、ご迷惑をおかけしましたことを、\n心より深くお詫び申し上げます。\n{{REASON}}\n次回以降は予定どおりの出荷を徹底いたします。",
+          "今後とも何卒よろしくお願い申し上げます。"
+        ],
+        soft: [
+          "件名：出荷遅延のお詫び",
+          "○○株式会社　○○様",
+          "いつもお世話になっております。株式会社△△の◇◇でございます。",
+          "{{REL}}大変恐縮ではございますが、出荷に遅れが生じており、\nご迷惑をおかけしておりますことを、心よりお詫び申し上げます。\n{{REASON}}\nご迷惑を最小限にとどめられるよう努めてまいります。",
+          "もしご不便な点がございましたら、どうぞお気軽にお申し付けくださいませ。\n今後とも何卒よろしくお願い申し上げます。"
+        ],
+        formal: [
+          "発信日：202X年〇月〇日",
+          "〇〇株式会社\n（役職）〇〇 〇〇 様\n（※個人のお客様宛の場合は「〇〇 〇〇 様」のみで結構です）",
+          "                                        株式会社△△\n                                        （部署名）〇〇 〇〇",
+          "件名：【お詫び】ご注文商品の発送遅延について",
+          "拝啓　平素は格別のご愛顧を賜り、厚く御礼申し上げます。\n株式会社△△の〇〇でございます。",
+          "この度は、弊社製品「（商品名）」をご注文いただき、誠にありがとうございます。",
+          "本日は、ご注文いただきました上記商品の発送につきまして、誠に勝手ながら\n予定日より遅れが生じる見込みとなりましたため、謹んでご報告かたがた\nお詫び申し上げます。",
+          "{{REL}}〇〇様のご期待に沿えぬ結果となり、\n多大なるご迷惑をおかけしますことを、深くお詫び申し上げます。",
+          "{{REASON}}",
+          "現在、一日も早くお届けできるよう最優先で手配を進めております。\n変更内容につきましては、下記のとおりご案内申し上げます。",
+          "記",
+          "【ご注文内容】\n　商品名　　　　　：（商品名）\n　数量　　　　　　：（数量）点\n　当初の発送予定日：202X年〇月〇日（〇）",
+          "【変更後のご案内】\n　発送予定日　　　：202X年〇月〇日（〇）\n　数量　　　　　　：（変更がある場合のみ記載）（数量）点",
+          "以上",
+          "商品のお届けまで、今しばらくお待ちいただけますよう伏してお願い申し上げます。\n今後はこのような不手際のないよう、生産および出荷体制の管理を徹底してまいります。",
+          "取り急ぎ、書面にて発送遅延のご報告とお詫びを申し上げます。\n何卒ご容赦のほど、よろしくお願い申し上げます。",
+          "敬具",
+          "--------------------------------------------------\n株式会社△△\n[部署名]　[氏名]\n〒000-0000 [住所]\nTEL：03-0000-0000 / FAX：03-0000-0000\nMail：example@email.com\nURL：https://www.example.com\n--------------------------------------------------"
+        ]
+      }
+    },
+    {
+      id: "quote",
+      label: "報價",
+      before: "想提供報價給客戶，附上價格明細，說明有效期限一個月，希望對方確認。",
+      keigo: [
+        ["ご案内申し上げます", "謙譲語。自分から相手に情報を差し出す行為を低めて述べる。"],
+        ["ご確認のうえ", "尊敬語の接頭辞「ご」。相手の行為を敬って述べる。"],
+        ["お気軽にお知らせくださいませ", "尊敬語の依頼表現。やわらかく行動を促す。"]
+      ],
+      tips: [
+        "初次合作的新客戶：開頭可加「初めてご連絡させていただきます」，先自我介紹再進入報價內容。",
+        "金額較大或較複雜的報價：可加「ご不明点がございましたら、いつでもご相談ください」，降低對方猶豫的門檻。"
+      ],
+      variants: {
+        general: [
+          "件名：お見積りのご案内",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}ご依頼いただきました件について、お見積りを添付の通りご案内申し上げます。\n{{REASON}}本お見積りの有効期限は、本日より{{VALIDITY}}となっております。",
+          "ご確認のうえ、ご意見等ございましたら、お気軽にお知らせくださいませ。",
+          "よろしくお願いいたします。"
+        ],
+        soft: [
+          "件名：お見積りのご案内",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}ご依頼いただきました件につきまして、お見積りを添付のとおりご案内申し上げます。\n{{REASON}}ご予算やご希望に添えない点などございましたら、遠慮なくお申し付けください。\n内容の調整についても可能な限り対応させていただきます。",
+          "本お見積りの有効期限は、本日より{{VALIDITY}}を目安とさせていただいておりますが、\nご都合がございましたらご相談くださいませ。",
+          "よろしくお願いいたします。"
+        ],
+        formal: [
+          "件名：【お見積りご案内】の件",
+          "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n平素は格別のお引き立てを賜り、厚く御礼申し上げます。株式会社△△の◇◇でございます。",
+          "{{REL}}このたびはご照会を賜り、誠にありがとうございます。\nお見積りを別添のとおりご案内申し上げますので、何卒ご高覧賜りますようお願い申し上げます。\n{{REASON}}本お見積りの有効期限は、本日より{{VALIDITY}}とさせていただいております。",
+          "ご不明な点等ございましたら、何なりとお申し付けくださいませ。\n今後とも変わらぬお引き立てを賜りますよう、お願い申し上げます。",
+          "敬具"
+        ]
+      }
+    },
+    {
+      id: "reminder",
+      label: "催交期",
+      before: "東西還沒收到，想催廠商趕快交貨，但不要太兇。",
+      keigo: [
+        ["お伺いできますでしょうか", "謙譲語＋丁寧語。質問を控えめに、依頼のように述べる。"],
+        ["お忙しいところ恐縮ですが", "クッション言葉。對方可能正忙碌，用來緩和催促的語氣。"],
+        ["ご納品を賜れますと幸いです", "謙譲語「賜る」＋やわらかい依頼表現。只有填了下方「要求的新交期」欄位才會出現，預設不會要求新交期。"]
+      ],
+      tips: [
+        "預設只是單純詢問進度；若要明確要求新交期，請在下方「原因/補充說明」區塊的「要求的新交期」欄位填日期。",
+        "已經多次延遲、需要更明確態度時：可把草稿裡「までのご納品を賜れますと幸いです」改成「必ず○月○日までにご対応いただけますよう、お願い申し上げます」，語氣更堅定。"
+      ],
+      variants: {
+        general: [
+          "件名：ご進捗確認のお願い",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}先日ご依頼しておりました件について、{{REASON}}{{ORIGINAL}}現在の進捗状況をお伺いできますでしょうか。",
+          "{{DEADLINE}}お忙しいところ恐縮ですが、ご確認のほどよろしくお願いいたします。"
+        ],
+        soft: [
+          "件名：ご進捗確認のお願い",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}先日ご依頼しておりました件につきまして、{{REASON}}{{ORIGINAL}}差し支えなければ現在の進捗状況を\nお聞かせいただけますでしょうか。\nもしご都合が難しい場合は、早めにご相談いただけますと助かります。",
+          "{{DEADLINE}}お忙しいところ恐縮ですが、何卒よろしくお願い申し上げます。"
+        ],
+        formal: [
+          "件名：【進捗確認のお願い】○○の件",
+          "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n平素は格別のご高配を賜り、厚く御礼申し上げます。株式会社△△の◇◇でございます。",
+          "{{REL}}先日ご依頼申し上げました件につきまして、{{REASON}}{{ORIGINAL}}恐縮ながら進捗状況をお伺いしたく、\nご連絡を差し上げた次第でございます。",
+          "{{DEADLINE}}ご多忙のところ大変恐縮ではございますが、何卒よろしくお取り計らいくださいますよう\nお願い申し上げます。",
+          "敬具"
+        ]
+      }
+    },
+    {
+      id: "refusal",
+      label: "拒絕",
+      before: "不能接受對方的要求（例如降價或延長付款期限），想禮貌地拒絕。",
+      keigo: [
+        ["誠に恐縮ながら", "クッション言葉。拒否の前に置き、心理的な衝撃を和らげる。"],
+        ["お応えすることが難しい", "直接的な「できません」を避け、婉曲に拒否を伝える表現。"],
+        ["ご理解いただけますと幸いです", "謙譲語＋やわらかい依頼表現で締める。"]
+      ],
+      tips: [
+        "想保留未來彈性：可加一句「状況が変わりましたら、改めてご相談させていただきます」。",
+        "若對方是重要客戶，拒絕之餘可提出替代方案，例如「代わりに○○という形でご対応できればと存じます」。"
+      ],
+      variants: {
+        general: [
+          "件名：ご提案についてのご回答",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}ご提案いただきました件につきまして、社内で検討いたしましたが、\n{{REASON}}誠に恐縮ながら今回はご要望にお応えすることが難しい状況でございます。",
+          "何卒ご理解いただけますと幸いです。\n今後とも何卒よろしくお願い申し上げます。"
+        ],
+        soft: [
+          "件名：ご提案についてのご回答",
+          "○○株式会社　○○様",
+          "お世話になっております。株式会社△△の◇◇です。",
+          "{{REL}}ご提案いただきました件につきまして、社内で慎重に検討いたしましたが、\n{{REASON}}大変申し訳ございませんが、今回は見送らせていただきたく存じます。\nせっかくのご提案に沿えず、誠に心苦しい限りでございますが、\n何卒ご容赦いただけますと幸いです。",
+          "状況が変わりました際には、改めてご相談させていただければと存じます。\n今後とも何卒よろしくお願い申し上げます。"
+        ],
+        formal: [
+          "件名：【ご回答】ご提案の件について",
+          "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n平素は格別のご高配を賜り、厚く御礼申し上げます。株式会社△△の◇◇でございます。",
+          "{{REL}}このたびはご提案を賜り、誠にありがとうございます。\n社内にて慎重に検討を重ねました結果、{{REASON}}誠に遺憾ながら今回はご期待に沿いかねる\n結論に至りましたことを、深くお詫び申し上げます。",
+          "何卒事情をご賢察のうえ、ご容赦賜りますようお願い申し上げます。\n今後とも変わらぬお引き立てを賜りますよう、伏してお願い申し上げます。",
+          "敬具"
+        ]
+      }
+    }
+  ];
+
+  var RELATION_CLAUSES = {
+    apology: { "初次接觸": "初めてのお取引にもかかわらず、", "長期往來客戶": "", "上級或重要客戶": "平素より格別のご高配を賜っておりますところ、" },
+    quote: { "初次接觸": "初めてご連絡させていただきます。", "長期往來客戶": "", "上級或重要客戶": "平素より格別のお引き立てを賜り、" },
+    reminder: { "初次接觸": "初めてのご依頼にもかかわらず恐縮ですが、", "長期往來客戶": "", "上級或重要客戶": "平素より格別のご高配を賜っておりますところ、" },
+    refusal: { "初次接觸": "初めてのお取引でのご提案であったにもかかわらず、", "長期往來客戶": "", "上級或重要客戶": "日頃より格別のご高配を賜っておりますところ、" }
+  };
+
+  var FORMALITY_KEY = { "一般丁寧": "general", "更委婉謙讓": "soft", "嚴肅鄭重": "formal" };
+
+  // Soft guard against the free-text content clearly describing a different
+  // scenario than the one selected (e.g. content about a quote, scenario
+  // left on "催交期"). No AI here either — just keyword hints, scoped to
+  // words that are strongly scenario-specific (nothing generic like "抱歉",
+  // which shows up across apologies and soft refusals alike). A hit only
+  // ever produces a warning the user can override, never an auto-switch.
+  // "交期"/"價格"/"缺貨" deliberately excluded from every list below even
+  // though each is topically related to one scenario — they're generic
+  // enough (delivery timing, money, stock) to show up in realistic content
+  // for at least one *other* scenario too (e.g. "交期無法提前" is a refusal,
+  // not a reminder). Keep only words that signal the scenario's own *action*
+  // (asking for a quote, chasing a status, declining, apologizing), not
+  // words that merely name a topic every scenario can touch on.
+  var SCENARIO_KEYWORDS = {
+    apology: ["道歉", "延遲", "延誤", "出貨慢", "寄丟", "誤點", "sorry", "apolog", "delay"],
+    quote: ["報價", "報价", "見積", "詢價", "quote"],
+    reminder: ["進度", "催貨", "催交", "還沒收到", "何時到貨", "進貨進度", "eta", "etd", "status", "update"],
+    refusal: ["拒絕", "婉拒", "不接受", "無法接受", "不能接受", "無法承接", "無法配合", "decline", "reject"]
+  };
+
+  // Only suggests a scenario whose keyword score strictly beats the
+  // currently selected scenario's own score — a tie (e.g. content that
+  // mentions both "延遲" and "進度") stays with whatever the viewer already
+  // picked instead of defaulting to whichever scenario happens to be listed
+  // first in SCENARIO_KEYWORDS.
+  function detectScenarioHint(content, selectedId) {
+    var lower = content.toLowerCase();
+    var scores = {};
+    Object.keys(SCENARIO_KEYWORDS).forEach(function (id) {
+      var score = 0;
+      SCENARIO_KEYWORDS[id].forEach(function (kw) {
+        if (lower.indexOf(kw.toLowerCase()) !== -1) { score++; }
+      });
+      scores[id] = score;
+    });
+    var bestScore = scores[selectedId] || 0;
+    var best = null;
+    Object.keys(scores).forEach(function (id) {
+      if (id !== selectedId && scores[id] > bestScore) { bestScore = scores[id]; best = id; }
+    });
+    return best;
+  }
+
+  // Per-scenario "reason / extra detail" menus. Picking an option swaps a
+  // hand-written Japanese clause into the {{REASON}} slot, filled from a
+  // couple of plain text/number fields — still zero AI, just a second
+  // substitution axis alongside {{REL}}. `blankLabel` is null for apology,
+  // because an apology always needs a stated reason (no "none" state);
+  // for the others, the blank option reproduces the original fixed text
+  // exactly (REASON resolves to "").
+  var REASON_MENUS = {
+    apology: {
+      blankLabel: null,
+      options: {
+        equipment: {
+          label: "設備/產線故障",
+          fields: [],
+          build: function () { return "原因は工場内の設備に生じた不具合でございましたが、現在は復旧しております。"; }
+        },
+        demand_surge: {
+          label: "訂單超出預期暴增",
+          fields: [],
+          build: function () { return "原因は想定を上回るご注文が集中したことによるものでございますが、現在は体制を強化して対応しております。"; }
+        },
+        material_delay: {
+          label: "原物料供應延遲",
+          fields: [{ key: "material", label: "原物料名稱（可留空）", placeholder: "主要原材料" }],
+          build: function (v) { return "原因は" + (v.material || "主要原材料") + "の納入遅延によるものでございますが、現在は代替調達を進めております。"; }
+        },
+        logistics_delay: {
+          label: "物流/運送延誤",
+          fields: [],
+          build: function () { return "原因は運送業者側の都合による配送遅延でございますが、現在は代替手段を手配しております。"; }
+        }
+      }
+    },
+    quote: {
+      blankLabel: "— 不加附加說明 —",
+      options: {
+        min_order: {
+          label: "需達最低訂購量",
+          fields: [{ key: "qty", label: "最低數量（例：50）", placeholder: "50" }],
+          build: function (v) { return "本お見積りは、最低ご発注数量" + (v.qty || "○○") + "点を前提とした価格となっております。\n"; }
+        },
+        cost_increase: {
+          label: "原物料成本上升，價格較前次調整",
+          fields: [],
+          build: function () { return "原材料価格の高騰に伴い、誠に恐縮ながら今回より価格を見直させていただいております。\n"; }
+        },
+        custom_spec: {
+          label: "客製規格另計",
+          fields: [],
+          build: function () { return "ご指定の仕様はカスタム対応となるため、標準仕様とは別途のお見積りとさせていただいております。\n"; }
+        }
+      }
+    },
+    reminder: {
+      blankLabel: "— 不特別注明原因 —",
+      options: {
+        production_impact: {
+          label: "影響我方生產排程",
+          fields: [],
+          build: function () { return "貴社からの納品が弊社の生産スケジュールに直接影響しているため、"; }
+        },
+        customer_pressure: {
+          label: "終端客戶已詢問進度",
+          fields: [],
+          build: function () { return "弊社のお客様より納期についてお問い合わせをいただいているため、"; }
+        },
+        contract_deadline: {
+          label: "合約交期將至",
+          fields: [{ key: "deadline", label: "合約交期（可留空）", placeholder: "○月○日" }],
+          build: function (v) { return "契約上の納期" + (v.deadline ? "（" + v.deadline + "）" : "") + "が迫っているため、"; }
+        }
+      }
+    },
+    refusal: {
+      blankLabel: "— 不特別套用，沿用原本措辭 —",
+      options: {
+        schedule_full: {
+          label: "排程已滿至指定日期",
+          fields: [
+            { key: "fullUntil", label: "排程滿到（例：2026年末）", placeholder: "2026年末" },
+            { key: "nextSlot", label: "最快可接單時間（例：2027年第1四半期）", placeholder: "2027年第1四半期" }
+          ],
+          build: function (v) {
+            return (v.fullUntil || "○○") + "までの生産スケジュールがすべて埋まっており、貴社の今回のご注文につきましては" +
+              (v.nextSlot || "○○") + "以降のお届けとならざるを得ない状況のため、";
+          }
+        },
+        material_shortage: {
+          label: "原物料短缺",
+          fields: [
+            { key: "material", label: "原物料名稱（可留空）", placeholder: "主要原材料" },
+            { key: "recoverTime", label: "預估恢復供貨時間（可留空）", placeholder: "2027年2月頃" }
+          ],
+          build: function (v) {
+            var base = (v.material || "主要原材料") + "の調達状況が逼迫しており";
+            if (v.recoverTime) { base += "、供給が安定するのは" + v.recoverTime + "頃を見込んでおります"; }
+            return base + "ため、";
+          }
+        },
+        price: {
+          label: "價格無法達成",
+          fields: [],
+          build: function () {
+            return "ご提示いただきました価格条件につきましては、原材料費および諸経費の高騰により採算が合わず、";
+          }
+        },
+        quality_spec: {
+          label: "品質規格不符合",
+          fields: [],
+          build: function () {
+            return "ご指定いただきました仕様につきましては、弊社の製造工程では品質基準を満たすことが難しく、";
+          }
+        },
+        quantity_exceeds: {
+          label: "訂單數量超出承接能力",
+          fields: [
+            { key: "cap", label: "目前可承接數量上限（可留空）", placeholder: "例：1,000個" }
+          ],
+          build: function (v) {
+            var base = "ご依頼いただきました数量が、弊社の現在の生産能力";
+            if (v.cap) { base += "（上限" + v.cap + "）"; }
+            return base + "を大きく上回っており、";
+          }
+        }
+      }
+    }
+  };
+
+  // Plain always-shown fields (not a reason menu — just a value). Unlike
+  // free-text substitution, the unit comes from a dropdown of pre-written
+  // Japanese words, so a number is all the viewer has to supply — nothing
+  // typed in Chinese/English ends up pasted verbatim into the draft.
+  // Each scenario maps to an ARRAY of token-groups (a scenario can need more
+  // than one independent value — reminder needs both "what was originally
+  // promised" and "what new date, if any, we're now asking for").
+  var EXTRA_FIELDS = {
+    quote: [
+      {
+        token: "VALIDITY",
+        fields: [
+          { key: "num", type: "text", label: "有效期限數字（留空預設 1 個月）", placeholder: "例：2" },
+          {
+            key: "unit", type: "select", label: "單位", default: "ヶ月間",
+            options: [
+              { value: "日間", label: "天" },
+              { value: "週間", label: "週" },
+              { value: "ヶ月間", label: "個月" },
+              { value: "年間", label: "年" }
+            ]
+          }
+        ],
+        build: function (v) { return v.num ? (v.num + (v.unit || "ヶ月間")) : "1か月間"; }
+      }
+    ],
+    reminder: [
+      {
+        token: "ORIGINAL",
+        fields: [
+          { key: "origDate", type: "text", label: "原本約定的交期（可留空；填了會註明「原訂某日」）", placeholder: "例：11月3日" }
+        ],
+        // A leading clause (ends in "、"), so it fuses into the existing
+        // "could you tell us the status" sentence that follows it.
+        build: function (v) { return v.origDate ? ("当初のご案内では" + v.origDate + "のご予定でございましたが、") : ""; }
+      },
+      {
+        token: "DEADLINE",
+        fields: [
+          { key: "date", type: "text", label: "要求的新交期（可留空；留空就不會要求新日期）", placeholder: "例：11月15日" }
+        ],
+        // A standalone sentence (ends in "。\n"), so it can be dropped
+        // entirely when blank instead of leaving a half-written demand.
+        build: function (v) { return v.date ? (v.date + "までのご納品を賜れますと幸いです。\n") : ""; }
+      }
+    ]
+  };
+
+  function renderTemplate(paragraphs, tokens) {
+    tokens = tokens || {};
+    return paragraphs
+      .map(function (p) { return p.replace(/\{\{(\w+)\}\}/g, function (m, key) { return tokens[key] || ""; }); })
+      .join("\n\n");
+  }
+
+  var SCENARIO_LABELS = {};
+  SCENARIOS.forEach(function (s) { SCENARIO_LABELS[s.id] = s.label; });
+  SCENARIO_LABELS.other = "其他";
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        if (k === "text") node.textContent = attrs[k];
+        else node.setAttribute(k, attrs[k]);
+      });
+    }
+    (children || []).forEach(function (c) { node.appendChild(c); });
+    return node;
+  }
+
+  // Shared by the reference cards and the generator output — both render the
+  // same `[term, explanation]` keigo pairs as `<li><b>term</b> explanation`.
+  // Pass an existing <ul> as `target` to fill it in place; otherwise a new
+  // one is created.
+  function buildKeigoList(pairs, target) {
+    var ul = target || el("ul", { class: "chips" });
+    ul.innerHTML = "";
+    pairs.forEach(function (pair) {
+      ul.appendChild(el("li", {}, [el("b", { text: pair[0] }), document.createTextNode("　" + pair[1])]));
+    });
+    return ul;
+  }
+
+  function renderCards() {
+    var grid = document.getElementById("cardGrid");
+    SCENARIOS.forEach(function (s) {
+      var keigoList = buildKeigoList(s.keigo);
+
+      var tipsList = el("ul", { class: "tips" });
+      s.tips.forEach(function (t) {
+        tipsList.appendChild(el("li", { text: t }));
+      });
+
+      var afterText = el("div", { class: "after-text", text: renderTemplate(s.variants.general, {}) });
+
+      var applyBtn = el("button", { class: "btn-ghost apply-btn", type: "button", text: "套用到產生器" });
+      applyBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        document.getElementById("content").value = s.before;
+        document.getElementById("scenario").value = s.id;
+        renderReasonFields();
+        document.getElementById("generator").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      var afterBlock = el("div", { class: "after-block" }, [
+        el("div", { class: "before-line", text: "想說的事：" + s.before }),
+        afterText,
+        el("label", { text: "敬語等級標註" }),
+        keigoList,
+        el("label", { text: "可依關係調整" }),
+        tipsList,
+        applyBtn
+      ]);
+
+      var summary = el("summary", {}, [
+        el("span", { class: "scenario-tag", text: s.label }),
+        el("span", { class: "scenario-chevron", text: "▸" })
+      ]);
+
+      var card = el("details", { class: "card" }, [summary, afterBlock]);
+      grid.appendChild(card);
+    });
+  }
+
+  function renderResult(parsed) {
+    document.getElementById("draftText").value = parsed.draft;
+    buildKeigoList(parsed.keigo, document.getElementById("keigoList"));
+    var tipsList = document.getElementById("tipsList");
+    tipsList.innerHTML = "";
+    parsed.tips.forEach(function (t) { tipsList.appendChild(el("li", { text: t })); });
+    document.getElementById("output").hidden = false;
+  }
+
+  function readFormInput() {
+    var content = document.getElementById("content").value.trim();
+    if (!content) { return null; }
+    return {
+      content: content,
+      scenarioId: document.getElementById("scenario").value,
+      relation: document.getElementById("relation").value,
+      formality: document.getElementById("formality").value
+    };
+  }
+
+  function copyTextarea(textareaId, btnEl) {
+    var text = document.getElementById(textareaId).value;
+    var original = btnEl.textContent;
+    var done = function () {
+      btnEl.textContent = "已複製";
+      setTimeout(function () { btnEl.textContent = original; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function () {
+        document.getElementById(textareaId).select();
+      });
+    } else {
+      document.getElementById(textareaId).select();
+    }
+  }
+
+  function setStatus(msg, isErr) {
+    var s = document.getElementById("status");
+    s.textContent = msg || "";
+    s.classList.toggle("err", !!isErr);
+  }
+
+  var SCENARIOS_BY_ID = {};
+  SCENARIOS.forEach(function (s) { SCENARIOS_BY_ID[s.id] = s; });
+
+  // Shared by the reason-menu panel and the extra-fields panel: both render
+  // a list of {key, label, placeholder?} or {key, label, type:"select",
+  // options, default} field configs as labeled inputs, and both later read
+  // them back by the same "idPrefix + key" element id.
+  function buildFieldRow(idPrefix, f) {
+    var wrap = el("div", { class: "field" });
+    wrap.appendChild(el("label", { for: idPrefix + f.key, text: f.label }));
+    var input;
+    if (f.type === "select") {
+      input = el("select", { id: idPrefix + f.key });
+      f.options.forEach(function (opt) {
+        input.appendChild(el("option", { value: opt.value, text: opt.label }));
+      });
+      if (f.default) { input.value = f.default; }
+    } else {
+      input = el("input", { type: "text", id: idPrefix + f.key, autocomplete: "off" });
+      if (f.placeholder) { input.placeholder = f.placeholder; }
+    }
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  function renderFieldRows(containerId, idPrefix, fields) {
+    var container = document.getElementById(containerId);
+    container.innerHTML = "";
+    fields.forEach(function (f) { container.appendChild(buildFieldRow(idPrefix, f)); });
+  }
+
+  function readFieldValues(idPrefix, fields) {
+    var values = {};
+    fields.forEach(function (f) {
+      var fieldEl = document.getElementById(idPrefix + f.key);
+      values[f.key] = fieldEl ? fieldEl.value.trim() : "";
+    });
+    return values;
+  }
+
+  function currentReasonTemplate() {
+    var menu = REASON_MENUS[document.getElementById("scenario").value];
+    if (!menu) { return null; }
+    return menu.options[document.getElementById("reasonType").value] || null;
+  }
+
+  function renderReasonFieldInputs() {
+    var tpl = currentReasonTemplate();
+    renderFieldRows("reasonFields", "reasonField_", tpl ? tpl.fields : []);
+  }
+
+  var SCENARIO_HINTS = {
+    apology: "商品之後還是會送達，只是比原訂時間晚；這筆訂單完全不受理/不出貨的話，請改選「拒絕」。",
+    quote: "單純提供報價資訊給對方參考，沒有要拒絕或催促對方。",
+    reminder: "禮貌地詢問/催促對方的交期或進度，不是在回覆對方的要求。",
+    refusal: "明確婉拒對方的要求或訂單（數量、交期、價格、規格等都無法配合），這筆不會履行。",
+    other: "目前沒有現成範本，請參考下方四個範例自己改寫，或挑一個最接近的情境。"
+  };
+
+  function renderScenarioHint() {
+    document.getElementById("scenarioHint").textContent = SCENARIO_HINTS[document.getElementById("scenario").value] || "";
+  }
+
+  // Rebuilds the reason-type <select>'s own option list for the current
+  // scenario (each scenario has a different menu), then its fields.
+  function renderReasonFields() {
+    renderScenarioHint();
+    var menu = REASON_MENUS[document.getElementById("scenario").value];
+    var panel = document.getElementById("reasonPanel");
+    panel.hidden = !menu;
+    if (menu) {
+      var sel = document.getElementById("reasonType");
+      sel.innerHTML = "";
+      if (menu.blankLabel) { sel.appendChild(el("option", { value: "", text: menu.blankLabel })); }
+      Object.keys(menu.options).forEach(function (key) {
+        sel.appendChild(el("option", { value: key, text: menu.options[key].label }));
+      });
+      renderReasonFieldInputs();
+    }
+    renderExtraFields();
+    pendingMismatchKey = null;
+  }
+
+  // Field ids are namespaced per entry (extraField_<token>_<key>), not just
+  // per scenario — a scenario can hold several independent token-groups
+  // (see EXTRA_FIELDS) and this keeps their field keys from colliding if two
+  // groups ever reuse the same field name (e.g. both calling a field "date").
+  function extraFieldPrefix(entry) { return "extraField_" + entry.token + "_"; }
+
+  function renderExtraFields() {
+    var entries = EXTRA_FIELDS[document.getElementById("scenario").value] || [];
+    document.getElementById("extraPanel").hidden = entries.length === 0;
+    var container = document.getElementById("extraFields");
+    container.innerHTML = "";
+    entries.forEach(function (entry) {
+      entry.fields.forEach(function (f) { container.appendChild(buildFieldRow(extraFieldPrefix(entry), f)); });
+    });
+  }
+
+  var pendingMismatchKey = null;
+
+  function onGenerate() {
+    var input = readFormInput();
+    if (!input) {
+      setStatus("請先輸入想表達的事，等一下自己對照著填入草稿空格。", true);
+      return;
+    }
+    var scenario = SCENARIOS_BY_ID[input.scenarioId];
+    if (!scenario) {
+      setStatus("「其他」目前還沒有現成範本，請參考下方四個範例自己改寫，或挑一個最接近的情境。", true);
+      return;
+    }
+
+    var suggested = detectScenarioHint(input.content, input.scenarioId);
+    var mismatchKey = input.scenarioId + "::" + input.content;
+    if (suggested && pendingMismatchKey !== mismatchKey) {
+      pendingMismatchKey = mismatchKey;
+      document.getElementById("output").hidden = true;
+      setStatus(
+        "你輸入的內容看起來比較像「" + SCENARIO_LABELS[suggested] + "」情境，但目前選的是「" + scenario.label +
+        "」。確認沒問題的話，再按一次「產生日文草稿」即可送出；要修正的話請改選情境類型。",
+        true
+      );
+      return;
+    }
+    pendingMismatchKey = null;
+
+    var formalityKey = FORMALITY_KEY[input.formality] || "general";
+    var tokens = { REL: (RELATION_CLAUSES[scenario.id] || {})[input.relation] || "" };
+
+    var reasonTpl = currentReasonTemplate();
+    if (reasonTpl) {
+      tokens.REASON = reasonTpl.build(readFieldValues("reasonField_", reasonTpl.fields));
+    }
+
+    (EXTRA_FIELDS[scenario.id] || []).forEach(function (extra) {
+      tokens[extra.token] = extra.build(readFieldValues(extraFieldPrefix(extra), extra.fields));
+    });
+
+    var draft = renderTemplate(scenario.variants[formalityKey], tokens);
+    draft += "\n\n----------\n（你輸入的重點，請自行把細節填入上面的空格後刪除這段）\n" + input.content;
+
+    renderResult({
+      draft: draft,
+      keigo: scenario.keigo,
+      tips: scenario.tips
+    });
+    setStatus("已套用「" + scenario.label + "」的" + input.formality + "範本，請把方框、空格換成實際內容。");
+  }
+
+  renderCards();
+  renderReasonFields();
+  document.getElementById("scenario").addEventListener("change", renderReasonFields);
+  document.getElementById("reasonType").addEventListener("change", renderReasonFieldInputs);
+  document.getElementById("generateBtn").addEventListener("click", onGenerate);
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    copyTextarea("draftText", document.getElementById("copyBtn"));
+  });
+})();
+</script>
+</body>
+</html>
