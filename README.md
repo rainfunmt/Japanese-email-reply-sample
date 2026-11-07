@@ -6,7 +6,9 @@
 
 ## Demo
 
-開啟 [`index.html`](./index.html) 即可直接使用。操作流程：
+👉 [**線上試用**](https://htmlpreview.github.io/?https://raw.githubusercontent.com/rainfunmt/Japanese-email-reply-sample/main/index.html)（點了直接開啟可操作的網頁；原始碼在 [`index.html`](./index.html)）
+
+操作流程：
 
 1. 在「想表達的事」輸入想說的內容（中文或英文皆可，僅供你自己對照填空用）。
 2. 選擇「情境類型」：道歉／報價／催交期／拒絕。
